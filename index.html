@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1a0f20">
+<meta name="mobile-web-app-capable" content="yes">
+<title>यशु</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mukta:wght@300;400;600&family=Tiro+Devanagari+Marathi&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#1a0f20; --plum:#2b1631; --saffron:#ffb347; --rose:#f0507f;
+  --blush:#ffd9e2; --mist:#b9a0c4;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--night);color:var(--blush);font-family:'Mukta',sans-serif}
+body{display:flex;flex-direction:column;height:100dvh;padding:env(safe-area-inset-top) 20px env(safe-area-inset-bottom);overflow:hidden}
+header{text-align:center;padding-top:18px}
+h1{font-family:'Tiro Devanagari Marathi',serif;font-weight:400;font-size:46px;line-height:1.1}
+#status{margin-top:6px;min-height:22px;font-size:15px;color:var(--mist)}
+
+main{flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
+#orb{position:relative;width:min(56vw,230px);aspect-ratio:1;border-radius:50%;border:0;cursor:pointer;
+  background:radial-gradient(circle at 34% 28%,#ffd08a 0%,var(--rose) 52%,#5a1f55 100%);
+  box-shadow:0 0 70px 6px rgba(240,80,127,.35);transition:filter .6s,box-shadow .6s}
+#orb::before,#orb::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid var(--rose);opacity:0}
+#orb:focus-visible{outline:3px solid var(--saffron);outline-offset:6px}
+
+body[data-state=off] #orb,body[data-state=sleep] #orb{filter:saturate(.45) brightness(.55);box-shadow:0 0 30px 0 rgba(240,80,127,.15);animation:breathe 6s ease-in-out infinite}
+body[data-state=awake] #orb::before{animation:ring 2.4s ease-out infinite}
+body[data-state=awake] #orb::after{animation:ring 2.4s ease-out 1.2s infinite}
+body[data-state=busy] #orb{animation:think 1.4s ease-in-out infinite}
+body[data-state=speaking] #orb{animation:talk .75s ease-in-out infinite alternate;box-shadow:0 0 100px 14px rgba(255,179,71,.4)}
+@keyframes breathe{50%{transform:scale(1.04)}}
+@keyframes ring{from{transform:scale(1);opacity:.7}to{transform:scale(1.6);opacity:0}}
+@keyframes think{50%{transform:scale(.94);filter:hue-rotate(-25deg)}}
+@keyframes talk{to{transform:scale(1.08)}}
+
+#talk{min-height:128px;max-height:30dvh;overflow-y:auto;text-align:center;padding:0 4px 10px}
+#heard{font-size:14px;color:var(--mist);min-height:20px;margin-bottom:6px}
+#reply{font-family:'Tiro Devanagari Marathi',serif;font-size:21px;line-height:1.55}
+
+footer{display:flex;gap:8px;align-items:center;padding:8px 0 14px}
+#typed{flex:1;min-width:0;background:var(--plum);border:1px solid #4a2a55;border-radius:22px;color:var(--blush);
+  font:400 16px 'Mukta',sans-serif;padding:11px 16px}
+#typed::placeholder{color:#8d7498}
+.btn{background:var(--plum);border:1px solid #4a2a55;color:var(--blush);border-radius:22px;font:600 15px 'Mukta',sans-serif;padding:11px 16px;cursor:pointer}
+.btn:focus-visible,#typed:focus-visible{outline:2px solid var(--saffron)}
+.btn.main{background:var(--rose);border-color:var(--rose);color:#2a0b17}
+
+.sheet{position:fixed;inset:0;background:var(--night);z-index:5;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:16px;padding:28px;text-align:center}
+.sheet[hidden]{display:none}
+.sheet h2{font-family:'Tiro Devanagari Marathi',serif;font-weight:400;font-size:52px}
+.sheet p{color:var(--mist);max-width:30ch;line-height:1.5}
+.sheet input{width:100%;max-width:300px;background:var(--plum);border:1px solid #4a2a55;border-radius:22px;color:var(--blush);font:400 16px 'Mukta',sans-serif;padding:12px 16px;text-align:center}
+#err{color:var(--saffron);min-height:22px;font-size:15px}
+#mem{justify-content:flex-start;align-items:stretch;text-align:left;overflow-y:auto}
+#mem h2{font-size:34px;text-align:center}
+#facts{list-style:none;display:flex;flex-direction:column;gap:10px;line-height:1.5}
+#facts li{padding-left:14px;border-left:3px solid var(--rose)}
+#song{display:flex;align-items:center;gap:12px;background:var(--plum);border-radius:14px;padding:8px 12px;margin-bottom:8px}
+#song[hidden]{display:none}
+#song iframe{width:120px;height:68px;border-radius:8px;flex:none}
+#songTitle{font-size:14px;color:var(--mist);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body data-state="off">
+
+<header>
+  <h1>यशु</h1>
+  <div id="status"></div>
+</header>
+
+<main><button id="orb" aria-label="यशुला उठव किंवा झोपव"></button></main>
+
+<section id="talk" aria-live="polite">
+  <div id="heard"></div>
+  <div id="reply"></div>
+</section>
+
+<div id="song" hidden><div id="ytbox"></div><div id="songTitle"></div></div>
+
+<footer>
+  <input id="typed" placeholder="किंवा इथे लिही…" autocomplete="off">
+  <button class="btn" id="sendtxt">पाठव</button>
+  <button class="btn" id="memBtn">आठवणी</button>
+</footer>
+
+<div class="sheet" id="start">
+  <h2>यशु</h2>
+  <p id="intro">जागी होतेय… थोडं थांब.</p>
+  <input id="pw" type="password" placeholder="पासवर्ड" hidden autocomplete="current-password">
+  <button class="btn main" id="go" disabled>सुरू कर</button>
+  <div id="err"></div>
+</div>
+
+<div class="sheet" id="mem" hidden>
+  <h2>माझ्या आठवणी</h2>
+  <ul id="facts"></ul>
+  <button class="btn" id="forget">सगळं विसरायला लाव</button>
+  <button class="btn main" id="closeMem">बंद कर</button>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const LANGS = {mr:'mr-IN',hi:'hi-IN',en:'en-IN',gu:'gu-IN',ta:'ta-IN',te:'te-IN',kn:'kn-IN',bn:'bn-IN'};
+const GREET = {mr:'हो, बोल ना',hi:'हाँ, बोलो ना',en:'Yes, tell me'};
+// Wake phrases, in Devanagari or English letters: "yashu", "yashu aik na", "ayy bala aik na", "hello shhona"
+const WAKE = /(यश\S*|yash\S*|(अय्य|ए|ayy?|ae)\s*(बाळा|बाला|bala)\s*(ऐक\S*|एक\S*|aik\S*|aek\S*)(\s*(ना|na))?|(hello|hallo|हॅलो|हेलो|हलो)\s*(शोना|सोना|sh?h?ona))/i;
+// Stop-music phrase: "bas zal bala aata"
+const STOP = /(बस|बास|bas|baas)\s*(झालं|झाल|झालं\S*|zal\S*|zhal\S*|jhal\S*)/i;
+const STOP_SAY = {mr:'ठीक आहे बाळा, थांबवलं', hi:'ठीक है बाबू, रोक दिया', en:'Okay baby, stopped'};
+const STATUS = {sleep:'“यशु ऐक ना” म्हण, किंवा गोलावर टॅप कर', awake:'ऐकतेय…', busy:'विचार करतेय…', speaking:'', off:''};
+const SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+let pw = localStorage.getItem('yashu_pw') || '';
+let lang = 'mr', state = 'off', rec = null, recOn = false, idleT = null, wakeLock = null;
+const player = new Audio();
+const greetCache = {};
+
+function setState(s){ state = s; document.body.dataset.state = s; $('#status').textContent = STATUS[s] || ''; duck(s === 'speaking'); }
+
+async function api(path, body){
+  const r = await fetch(path, {
+    method: body ? 'POST' : 'GET',
+    headers: {'Content-Type':'application/json','X-App-Password':pw},
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (r.status === 401) throw new Error('password');
+  if (!r.ok) throw new Error('server');
+  return r.json();
+}
+
+function play(b64){
+  return new Promise(res => {
+    player.onended = player.onerror = () => res();
+    player.src = 'data:audio/mpeg;base64,' + b64;
+    player.play().catch(() => res());
+  });
+}
+
+/* ---------- listening ---------- */
+function startRec(){
+  if (!SR || recOn || !['sleep','awake'].includes(state)) return;
+  rec = new SR();
+  rec.lang = LANGS[lang] || 'mr-IN';
+  rec.continuous = true;
+  rec.interimResults = false;
+  rec.onresult = e => {
+    for (let i = e.resultIndex; i < e.results.length; i++){
+      if (e.results[i].isFinal) onHeard(e.results[i][0].transcript.trim());
+    }
+  };
+  rec.onend = () => { recOn = false; if (['sleep','awake'].includes(state)) setTimeout(startRec, 300); };
+  rec.onerror = e => {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed'){
+      $('#status').textContent = 'मायक्रोफोनची परवानगी दे (Chrome सेटिंग्ज)';
+      state = 'off'; document.body.dataset.state = 'off';
+    }
+  };
+  try { rec.start(); recOn = true; } catch(e) {}
+}
+function stopRec(){
+  if (rec){ rec.onend = null; try { rec.abort(); } catch(e) {} }
+  recOn = false;
+}
+
+function onHeard(text){
+  if (!text) return;
+  if (songOn && STOP.test(text)){ stopSong(); say(STOP_SAY[lang] || STOP_SAY.mr); return; }
+  if (state === 'sleep'){
+    const m = text.match(WAKE);
+    if (m) wake(text.replace(WAKE, '').replace(/^[\s,.!?]+/, '').trim());
+  } else if (state === 'awake'){
+    send(text);
+  }
+}
+
+/* ---------- conversation ---------- */
+function resetIdle(){
+  clearTimeout(idleT);
+  idleT = setTimeout(() => { if (state === 'awake') setState('sleep'); }, 30000);
+}
+
+function afterSpeak(){
+  setState('awake');
+  startRec();
+  resetIdle();
+}
+
+async function say(text){
+  stopRec();
+  setState('speaking');
+  $('#heard').textContent = '';
+  $('#reply').textContent = text + ' 💗';
+  try {
+    const k = lang + text;
+    if (!greetCache[k]) greetCache[k] = (await api('/api/tts', {text, language:lang, emotion:'soft'})).audio;
+    await play(greetCache[k]);
+  } catch(e) {}
+  afterSpeak();
+}
+
+async function wake(rest){
+  stopRec();
+  rest = rest.replace(/^[\s,.!?]*(ऐक\S*|एक\S*|aik\S*|aek\S*)\s*(ना|na)?/i, '').replace(/^[\s,.!?]+/, '').trim();
+  if (rest.length > 3) return send(rest);
+  return say(GREET[lang] || GREET.en);
+}
+
+/* ---------- songs (YouTube) ---------- */
+let yt = null, songOn = false;
+function loadYT(){
+  return new Promise(res => {
+    if (window.YT && YT.Player) return res();
+    window.onYouTubeIframeAPIReady = res;
+    const s = document.createElement('script');
+    s.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(s);
+  });
+}
+async function playSong(id, title){
+  await loadYT();
+  $('#song').hidden = false;
+  $('#songTitle').textContent = '♪ ' + title;
+  songOn = true;
+  if (yt){ yt.loadVideoById(id); return; }
+  yt = new YT.Player('ytbox', {
+    width: '120', height: '68', videoId: id,
+    playerVars: {autoplay: 1, playsinline: 1},
+    events: {
+      onReady: e => e.target.playVideo(),
+      onStateChange: e => { if (e.data === 0) stopSong(); }
+    }
+  });
+}
+function stopSong(){
+  if (yt){ try { yt.stopVideo(); } catch(e) {} }
+  songOn = false;
+  $('#song').hidden = true;
+}
+function duck(on){            // lower the music while Yashu talks
+  if (yt && songOn){ try { yt.setVolume(on ? 15 : 100); } catch(e) {} }
+}
+
+async function send(text){
+  clearTimeout(idleT);
+  stopRec();
+  setState('busy');
+  $('#heard').textContent = 'तू: ' + text;
+  try {
+    const d = await api('/api/chat', {text});
+    lang = d.language || lang;
+    $('#reply').textContent = d.text;
+    setState('speaking');
+    if (d.audio) await play(d.audio);
+    if (d.action && d.action.type === 'play_song') await playSong(d.action.video_id, d.action.title);
+  } catch(e) {
+    $('#reply').textContent = e.message === 'password' ? 'पासवर्ड चुकला.' : 'काहीतरी गडबड झाली. परत बोल ना.';
+  }
+  afterSpeak();
+}
+
+/* ---------- controls ---------- */
+$('#orb').onclick = () => {
+  if (state === 'sleep') wake('');
+  else if (state === 'awake'){ clearTimeout(idleT); setState('sleep'); }
+  else if (state === 'speaking'){ player.pause(); player.dispatchEvent(new Event('ended')); }
+};
+function sendTyped(){
+  const t = $('#typed').value.trim();
+  if (!t || ['busy','off'].includes(state)) return;
+  $('#typed').value = '';
+  send(t);
+}
+$('#sendtxt').onclick = sendTyped;
+$('#typed').addEventListener('keydown', e => { if (e.key === 'Enter') sendTyped(); });
+
+$('#memBtn').onclick = async () => {
+  $('#mem').hidden = false;
+  $('#facts').innerHTML = '<li>वाचतेय…</li>';
+  try {
+    const {facts} = await api('/api/memory');
+    $('#facts').innerHTML = '';
+    if (!facts.length) $('#facts').innerHTML = '<li>अजून काही नाही. मला तुझ्याबद्दल सांग ना.</li>';
+    facts.forEach(f => { const li = document.createElement('li'); li.textContent = f; $('#facts').appendChild(li); });
+  } catch(e) { $('#facts').innerHTML = '<li>आठवणी उघडता आल्या नाहीत.</li>'; }
+};
+$('#closeMem').onclick = () => { $('#mem').hidden = true; };
+$('#forget').onclick = async () => {
+  if (!confirm('यशु तुझ्याबद्दलचं सगळं विसरेल. नक्की?')) return;
+  await api('/api/forget', {});
+  $('#facts').innerHTML = '<li>सगळं विसरले.</li>';
+};
+
+/* ---------- start screen ---------- */
+async function boot(){
+  try {
+    const p = await api('/api/ping');
+    $('#intro').textContent = 'तयार आहे. सुरू कर आणि “यशु ऐक ना” म्हण.';
+    if (p.needs_password && !p.ok) $('#pw').hidden = false;
+    $('#go').disabled = false;
+  } catch(e) {
+    if (e.message === 'password'){ $('#pw').hidden = false; $('#go').disabled = false; }
+    else { $('#intro').textContent = 'सर्व्हर उठतोय… परत प्रयत्न करतेय.'; setTimeout(boot, 4000); }
+  }
+}
+$('#go').onclick = async () => {
+  if (!$('#pw').hidden) pw = $('#pw').value;
+  try {
+    const p = await api('/api/ping');
+    if (!p.ok){ $('#err').textContent = 'पासवर्ड चुकला.'; return; }
+  } catch(e) { $('#err').textContent = 'पासवर्ड चुकला किंवा सर्व्हर बंद आहे.'; return; }
+  localStorage.setItem('yashu_pw', pw);
+  player.src = SILENT; player.play().catch(() => {});   // unlocks audio on phones
+  try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
+  $('#start').hidden = true;
+  if (!SR){ $('#status').textContent = 'हा ब्राउझर बोलणं ऐकू शकत नाही. Chrome वापर, किंवा खाली लिही.'; setState('off'); return; }
+  setState('sleep');
+  startRec();
+};
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible' && state !== 'off'){
+    try { wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
+    startRec();
+  }
+});
+boot();
+</script>
+</body>
+</html>
